@@ -87,9 +87,9 @@ flowchart TD
     J --> K[Chat interface]
 ```
 
-Two things about this diagram are deliberate, not accidental:
+Two things about this diagram are deliberate:
 
-**PPO and DPO both start from the post SFT policy, not from each other's
+**PPO and DPO both start from the post SFT policy and not from each other's
 output.** They are alternative alignment strategies for the same starting
 point, and mixing their effects together would make it impossible to say
 which method produced which behavior. See `docs/TRADEOFFS.md` for the full
