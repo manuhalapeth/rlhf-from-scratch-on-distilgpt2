@@ -1,0 +1,252 @@
+{
+  "model_name": "distilgpt2",
+  "base_completion": "Hello, how are you?\n\n\n\n\n\n\n\n\n\n\n\n",
+  "sft": {
+    "train_losses": [
+      5.022614479064941,
+      4.208374977111816,
+      5.3546977043151855,
+      4.180204391479492,
+      3.6274666786193848,
+      4.378317356109619,
+      3.7197775840759277,
+      3.6107473373413086,
+      0.5799786448478699,
+      0.9700364470481873,
+      2.856605052947998,
+      2.6773784160614014,
+      2.3403663635253906,
+      0.6208404898643494,
+      2.0512497425079346,
+      1.3581359386444092,
+      0.5606831312179565,
+      1.6595885753631592,
+      0.2718674838542938,
+      0.6927704215049744,
+      1.1248185634613037,
+      0.6208047866821289,
+      0.4495811462402344,
+      0.0062674242071807384,
+      0.023840902373194695,
+      0.16024601459503174,
+      0.2519611418247223,
+      0.045726872980594635,
+      0.11052638292312622,
+      0.007731735706329346,
+      0.01946047507226467,
+      0.029771704226732254,
+      0.014343990944325924,
+      0.005301989149302244,
+      0.01680959016084671,
+      0.001652125851251185
+    ],
+    "val_loss": 4.91144323348999,
+    "post_sft_completion": "What is the capital of Japan? Tokyo. Tokyo. Tokyo. Tokyo. Tokyo. Tokyo."
+  },
+  "lora": {
+    "base_trainable": 0,
+    "lora_trainable": 408200,
+    "trainable_pct": 0.49586510214626744,
+    "b_zero_matches_base": true,
+    "losses": [
+      4.550857067108154,
+      4.550857067108154,
+      4.51792311668396,
+      4.3436806201934814,
+      3.8236591815948486,
+      3.110152840614319,
+      3.0652544498443604,
+      3.1100038290023804,
+      2.840335249900818,
+      2.9763399362564087,
+      2.9937185049057007,
+      2.6604907512664795,
+      2.360974073410034,
+      2.0876514315605164,
+      1.8614751100540161
+    ],
+    "merge_matches_forward": true
+  },
+  "reward_model": {
+    "losses": [
+      0.38743674755096436,
+      0.3217642903327942,
+      0.31194645166397095,
+      0.35540392994880676,
+      0.21126902103424072,
+      0.2318631410598755,
+      0.14080995321273804,
+      0.2291237711906433,
+      0.25991785526275635,
+      0.30200904607772827,
+      0.17542530596256256,
+      0.04817523807287216,
+      0.10643510520458221,
+      0.19165627658367157,
+      0.1481868028640747
+    ],
+    "accuracies": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "normalization_mean": -13.47072203954061,
+    "normalization_std": 2.1234581692190164
+  },
+  "ppo": {
+    "rewards": [
+      0.41788053264394315,
+      4.394601801090888,
+      -1.9921780638927247
+    ],
+    "policy_losses": [
+      2.1090447902679443,
+      1.5028032064437866,
+      -0.9436530470848083,
+      -1.052808403968811,
+      2.5159523487091064,
+      2.779193878173828
+    ],
+    "value_losses": [
+      2.7796223163604736,
+      3.245736837387085,
+      1.7398074865341187,
+      1.964701771736145,
+      7.705494403839111,
+      8.921085357666016
+    ],
+    "entropies": [
+      0.39164993166923523,
+      0.3522302210330963,
+      0.6091405153274536,
+      0.7892417311668396,
+      1.3054323196411133,
+      1.0818164348602295
+    ]
+  },
+  "dpo": {
+    "losses": [
+      0.6931471824645996,
+      0.5075646638870239,
+      0.6759639978408813,
+      0.4708842933177948,
+      0.4874098300933838,
+      0.2024945765733719,
+      0.28132086992263794,
+      0.2343662530183792,
+      0.41003382205963135,
+      0.25275182723999023,
+      0.5157216787338257,
+      0.028999198228120804
+    ],
+    "margins": [
+      0.0,
+      4.413122653961182,
+      0.35194575786590576,
+      6.241497039794922,
+      6.945712089538574,
+      17.20708465576172,
+      16.597715377807617,
+      18.21990394592285,
+      9.88375473022461,
+      18.092819213867188,
+      4.989132404327393,
+      35.93513488769531
+    ],
+    "preference_loss_comparison": {
+      "dpo": 0.028999198228120804,
+      "ipo": 971.1905517578125,
+      "kto": 0.16856610774993896,
+      "orpo": 3.766826629638672,
+      "simpo": 0.3224733769893646
+    }
+  },
+  "eval": {
+    "out_of_domain": {
+      "win_rate": 0.16666666666666666,
+      "examples": [
+        {
+          "prompt": "Explain the water cycle in simple terms.",
+          "aligned": "\n\n\nThe water cycle in simple terms. The water cycle in simple terms. The water cycle",
+          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        },
+        {
+          "prompt": "Write a short thank you note to a coworker.",
+          "aligned": " A short thank you note to a coworker. A short thank you note to a coworker.",
+          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        },
+        {
+          "prompt": "What are three tips for staying productive while working from home?",
+          "aligned": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        },
+        {
+          "prompt": "Summarize the benefits of regular exercise.",
+          "aligned": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        },
+        {
+          "prompt": "Give step by step instructions for making a cup of tea.",
+          "aligned": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "base": "\n\n\n\nStep 1:\nStep 2:\nStep 3:\nStep 4:\n"
+        },
+        {
+          "prompt": "Recommend a book for someone who enjoys mystery novels.",
+          "aligned": "\n\n\nThe book, \"The Mystery of a Book of Mormon,\" was a must-read",
+          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        }
+      ]
+    },
+    "in_domain": {
+      "win_rate": 0.3333333333333333,
+      "examples": [
+        {
+          "prompt": "What is the capital of Italy?",
+          "aligned": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        },
+        {
+          "prompt": "What is 3 + 5?",
+          "aligned": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        },
+        {
+          "prompt": "Explain what gravity is.",
+          "aligned": " Gravity is a force in a vacuum. Gravity is a force in a vacuum. Gravity is a force",
+          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        },
+        {
+          "prompt": "How do I sort a list in Python?",
+          "aligned": "\nPython is a language that is built on top of the concepts of programming. It is a language",
+          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        },
+        {
+          "prompt": "Summarize the plot of Snow White in one sentence.",
+          "aligned": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        },
+        {
+          "prompt": "What is the freezing point of water at sea level in Celsius?",
+          "aligned": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        }
+      ]
+    }
+  },
+  "chat": {
+    "reply": "Bonjour.\nBonjour.\nBonjour.\nBonjour.",
+    "streaming_reply": " Paris. The capital of France is Paris. The capital of"
+  }
+}
