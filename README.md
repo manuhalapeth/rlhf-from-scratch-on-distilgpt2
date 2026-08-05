@@ -14,9 +14,9 @@ Nothing below is hand edited or cherry picked; see `docs/RESULTS.md` for the
 full writeup and `assets/results.json` for the raw numbers from the run that
 produced these charts.
 
-## What this is, and what it is not
+## What this is and what it is not
 
-This is a correctness and legibility project, not a leaderboard result. The
+This is a correctness and legibility project. The
 goal was to implement every piece of an RLHF pipeline correctly, wire it
 together into something that actually runs against a real (if small)
 language model, and be completely honest in the writeup about what six
