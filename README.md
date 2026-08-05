@@ -162,7 +162,7 @@ coherent pipeline that exercises all sixty five underlying functions, and
 documented across `docs/` with real numbers from real runs. The fundamentals
 came from a guided exercise; everything built on top of them, the
 architecture, the bug fixes, the missing PPO and DPO wiring, the evaluation
-design, and this documentation, did not.
+design, and this documentation did not.
 
 ## What I would do next
 
