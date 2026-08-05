@@ -2,13 +2,12 @@
 
 This document explains how the repository is organized, how data and models
 flow through the pipeline, and why the code is split the way it is. If you
-only read one document besides the README, read this one; it is the map for
+only read one document besides the README, read this one. It is the map for
 everything else.
 
 ## Goal of the system
 
-The system takes a pretrained causal language model (real DistilGPT2, not a
-placeholder) and carries it through every stage of a reinforcement learning
+The system takes a pretrained causal language model (DistilGPT2) and carries it through every stage of a reinforcement learning
 from human feedback pipeline, implemented from first principles rather than
 imported from a library such as TRL:
 
