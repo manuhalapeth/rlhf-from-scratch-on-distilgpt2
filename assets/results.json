@@ -3,45 +3,45 @@
   "base_completion": "Hello, how are you?\n\n\n\n\n\n\n\n\n\n\n\n",
   "sft": {
     "train_losses": [
-      5.022614479064941,
-      4.208374977111816,
-      5.3546977043151855,
-      4.180204391479492,
-      3.6274666786193848,
-      4.378317356109619,
-      3.7197775840759277,
-      3.6107473373413086,
-      0.5799786448478699,
-      0.9700364470481873,
-      2.856605052947998,
-      2.6773784160614014,
-      2.3403663635253906,
-      0.6208404898643494,
-      2.0512497425079346,
-      1.3581359386444092,
-      0.5606831312179565,
-      1.6595885753631592,
-      0.2718674838542938,
-      0.6927704215049744,
-      1.1248185634613037,
-      0.6208047866821289,
-      0.4495811462402344,
-      0.0062674242071807384,
-      0.023840902373194695,
-      0.16024601459503174,
-      0.2519611418247223,
-      0.045726872980594635,
-      0.11052638292312622,
-      0.007731735706329346,
-      0.01946047507226467,
-      0.029771704226732254,
-      0.014343990944325924,
-      0.005301989149302244,
-      0.01680959016084671,
-      0.001652125851251185
+      4.948740005493164,
+      4.212701320648193,
+      4.616269111633301,
+      3.371603488922119,
+      3.2571630477905273,
+      3.87016224861145,
+      3.194939374923706,
+      3.1229264736175537,
+      0.5334318280220032,
+      0.775116503238678,
+      2.406771421432495,
+      2.2969276905059814,
+      1.936291217803955,
+      0.5482834577560425,
+      1.698177695274353,
+      1.082714319229126,
+      0.5460371971130371,
+      1.3423959016799927,
+      0.3543049395084381,
+      0.5158005356788635,
+      0.8444281816482544,
+      0.43503502011299133,
+      0.3485083281993866,
+      0.01338205486536026,
+      0.02416013367474079,
+      0.05373871326446533,
+      0.23127976059913635,
+      0.02150150015950203,
+      0.08538389205932617,
+      0.0027343668043613434,
+      0.002598821884021163,
+      0.017444049939513206,
+      0.01303112506866455,
+      0.004365251399576664,
+      0.012482774443924427,
+      0.0013512847945094109
     ],
-    "val_loss": 4.91144323348999,
-    "post_sft_completion": "What is the capital of Japan? Tokyo. Tokyo. Tokyo. Tokyo. Tokyo. Tokyo."
+    "val_loss": 5.643185138702393,
+    "post_sft_completion": "The capital of Japan is Tokyo."
   },
   "lora": {
     "base_trainable": 0,
@@ -49,204 +49,246 @@
     "trainable_pct": 0.49586510214626744,
     "b_zero_matches_base": true,
     "losses": [
-      4.550857067108154,
-      4.550857067108154,
-      4.51792311668396,
-      4.3436806201934814,
-      3.8236591815948486,
-      3.110152840614319,
-      3.0652544498443604,
-      3.1100038290023804,
-      2.840335249900818,
-      2.9763399362564087,
-      2.9937185049057007,
-      2.6604907512664795,
-      2.360974073410034,
-      2.0876514315605164,
-      1.8614751100540161
+      4.430865287780762,
+      4.402850866317749,
+      4.242471933364868,
+      3.7702114582061768,
+      3.0409767627716064,
+      2.631210684776306,
+      2.9491915702819824,
+      3.1990208625793457,
+      3.23607861995697,
+      2.890231728553772,
+      2.292222499847412,
+      1.828750729560852,
+      1.7644404172897339,
+      1.7801506519317627,
+      1.7085556983947754
     ],
     "merge_matches_forward": true
   },
   "reward_model": {
     "losses": [
-      0.38743674755096436,
-      0.3217642903327942,
-      0.31194645166397095,
-      0.35540392994880676,
-      0.21126902103424072,
-      0.2318631410598755,
-      0.14080995321273804,
-      0.2291237711906433,
-      0.25991785526275635,
-      0.30200904607772827,
-      0.17542530596256256,
-      0.04817523807287216,
-      0.10643510520458221,
-      0.19165627658367157,
-      0.1481868028640747
+      0.5316199660301208,
+      0.27151307463645935,
+      0.3787420094013214,
+      0.4758535325527191,
+      0.24840892851352692,
+      0.225494384765625,
+      0.17674018442630768,
+      0.22835735976696014,
+      0.34686291217803955,
+      0.40383243560791016,
+      0.23511266708374023,
+      0.013046814128756523,
+      0.09701558202505112,
+      0.2752082049846649,
+      0.18513615429401398
     ],
     "accuracies": [
+      0.5,
+      0.75,
+      0.75,
+      0.5,
+      0.75,
+      0.75,
+      1.0,
+      0.75,
+      0.75,
+      0.5,
       1.0,
       1.0,
       1.0,
-      1.0,
-      1.0,
-      1.0,
-      1.0,
-      1.0,
-      1.0,
-      1.0,
-      1.0,
-      1.0,
-      1.0,
-      1.0,
-      1.0
+      0.75,
+      0.75
     ],
-    "normalization_mean": -13.47072203954061,
-    "normalization_std": 2.1234581692190164
+    "normalization_mean": -10.814043283462524,
+    "normalization_std": 2.3691850368023974
   },
   "ppo": {
     "rewards": [
-      0.41788053264394315,
-      4.394601801090888,
-      -1.9921780638927247
+      2.253980834267837,
+      2.1258955508243114,
+      -0.23985903846369425
     ],
     "policy_losses": [
-      2.1090447902679443,
-      1.5028032064437866,
-      -0.9436530470848083,
-      -1.052808403968811,
-      2.5159523487091064,
-      2.779193878173828
+      -0.0,
+      0.0005004644626751542,
+      -9.934107758624577e-09,
+      6.318092346191406e-05,
+      1.6391277313232422e-07,
+      -0.027025684714317322
     ],
     "value_losses": [
-      2.7796223163604736,
-      3.245736837387085,
-      1.7398074865341187,
-      1.964701771736145,
-      7.705494403839111,
-      8.921085357666016
+      3.3623123168945312,
+      1.2079474925994873,
+      1.7071584463119507,
+      1.1451040506362915,
+      3.3962080478668213,
+      2.567105293273926
     ],
     "entropies": [
-      0.39164993166923523,
-      0.3522302210330963,
-      0.6091405153274536,
-      0.7892417311668396,
-      1.3054323196411133,
-      1.0818164348602295
+      0.008479634299874306,
+      0.012789925560355186,
+      0.05138420686125755,
+      0.05359703674912453,
+      0.08028178662061691,
+      0.10318254679441452
     ]
   },
   "dpo": {
     "losses": [
       0.6931471824645996,
-      0.5075646638870239,
-      0.6759639978408813,
-      0.4708842933177948,
-      0.4874098300933838,
-      0.2024945765733719,
-      0.28132086992263794,
-      0.2343662530183792,
-      0.41003382205963135,
-      0.25275182723999023,
-      0.5157216787338257,
-      0.028999198228120804
+      0.39117205142974854,
+      0.6606372594833374,
+      0.35224780440330505,
+      0.4132339656352997,
+      0.12016119807958603,
+      0.16967877745628357,
+      0.16705681383609772,
+      0.26921311020851135,
+      0.19999319314956665,
+      0.26255694031715393,
+      0.0024821339175105095
     ],
     "margins": [
       0.0,
-      4.413122653961182,
-      0.35194575786590576,
-      6.241497039794922,
-      6.945712089538574,
-      17.20708465576172,
-      16.597715377807617,
-      18.21990394592285,
-      9.88375473022461,
-      18.092819213867188,
-      4.989132404327393,
-      35.93513488769531
+      9.640618324279785,
+      0.6837344169616699,
+      16.6298828125,
+      10.844992637634277,
+      32.96357727050781,
+      25.354209899902344,
+      43.101318359375,
+      18.414352416992188,
+      28.656692504882812,
+      14.293350219726562,
+      64.23524475097656
     ],
     "preference_loss_comparison": {
-      "dpo": 0.028999198228120804,
-      "ipo": 971.1905517578125,
-      "kto": 0.16856610774993896,
-      "orpo": 3.766826629638672,
-      "simpo": 0.3224733769893646
+      "dpo": 0.0024821339175105095,
+      "ipo": 3606.99560546875,
+      "kto": 0.0545758381485939,
+      "orpo": 5.085786819458008,
+      "simpo": 0.007922953926026821
     }
   },
   "eval": {
     "out_of_domain": {
-      "win_rate": 0.16666666666666666,
+      "win_rate": 0.8333333333333334,
+      "wins": 5,
+      "ties": 0,
+      "losses": 1,
       "examples": [
         {
           "prompt": "Explain the water cycle in simple terms.",
-          "aligned": "\n\n\nThe water cycle in simple terms. The water cycle in simple terms. The water cycle",
-          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+          "aligned": "The water cycle in simple terms.",
+          "base": "The water cycle is a simple way to describe the water cycle in a simple way.\n### Response",
+          "outcome": "win",
+          "aligned_score": -9.467077255249023,
+          "base_score": -12.512380599975586
         },
         {
           "prompt": "Write a short thank you note to a coworker.",
-          "aligned": " A short thank you note to a coworker. A short thank you note to a coworker.",
-          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+          "aligned": "The National Center for Missing and Exploited Children (NCNEOC) is a National Center for",
+          "base": "This is a question that I have been asked about in the past. I have been asked about in",
+          "outcome": "win",
+          "aligned_score": -11.372357368469238,
+          "base_score": -11.895825386047363
         },
         {
           "prompt": "What are three tips for staying productive while working from home?",
-          "aligned": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
-          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+          "aligned": "Two young women from rural Des Moines, Iowa, died Sunday, Dec. 2, 2014.",
+          "base": "If you are working from home, you should be able to focus on your work.\n###\n",
+          "outcome": "loss",
+          "aligned_score": -7.723769187927246,
+          "base_score": -6.016115665435791
         },
         {
           "prompt": "Summarize the benefits of regular exercise.",
-          "aligned": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
-          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+          "aligned": "The daily routine of the day is the same one.",
+          "base": "The following is a summary of the following exercises:\n1. Exercise\n2. Exercise\n3",
+          "outcome": "win",
+          "aligned_score": -9.057647705078125,
+          "base_score": -12.310799598693848
         },
         {
           "prompt": "Give step by step instructions for making a cup of tea.",
-          "aligned": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
-          "base": "\n\n\n\nStep 1:\nStep 2:\nStep 3:\nStep 4:\n"
+          "aligned": "The cup of tea is one of the most powerful and most powerful.",
+          "base": "The instructions are for the following:\n1. Make a cup of tea.\n2. Make",
+          "outcome": "win",
+          "aligned_score": -10.21729850769043,
+          "base_score": -11.821065902709961
         },
         {
           "prompt": "Recommend a book for someone who enjoys mystery novels.",
-          "aligned": "\n\n\nThe book, \"The Mystery of a Book of Mormon,\" was a must-read",
-          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+          "aligned": "Two young lovers from feuding families in Verona die tragically, ultimately reconciling their households.",
+          "base": "This is a book about the mystery novels of the past.\n###\nThis is a book about",
+          "outcome": "win",
+          "aligned_score": -3.881481170654297,
+          "base_score": -9.660369873046875
         }
       ]
     },
     "in_domain": {
-      "win_rate": 0.3333333333333333,
+      "win_rate": 0.6666666666666666,
+      "wins": 4,
+      "ties": 0,
+      "losses": 2,
       "examples": [
         {
           "prompt": "What is the capital of Italy?",
-          "aligned": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
-          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+          "aligned": "The capital of Italy is Rome.",
+          "base": "The capital of Italy is the capital of Italy. The capital of Italy is the capital of Italy.",
+          "outcome": "loss",
+          "aligned_score": -10.915993690490723,
+          "base_score": -10.232490539550781
         },
         {
           "prompt": "What is 3 + 5?",
-          "aligned": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
-          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+          "aligned": "3 + 5 is a research question.",
+          "base": "The following is a summary of the 3 + 5 instruction instructions.\nThe following is a summary of",
+          "outcome": "win",
+          "aligned_score": -9.050909042358398,
+          "base_score": -10.161147117614746
         },
         {
           "prompt": "Explain what gravity is.",
-          "aligned": " Gravity is a force in a vacuum. Gravity is a force in a vacuum. Gravity is a force",
-          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+          "aligned": "The gravity of the universe is one of two things. One is true, and the other is false",
+          "base": "The following is a short video of the video.\nThe video is a short video of the video",
+          "outcome": "win",
+          "aligned_score": -5.747094631195068,
+          "base_score": -9.97807502746582
         },
         {
           "prompt": "How do I sort a list in Python?",
-          "aligned": "\nPython is a language that is built on top of the concepts of programming. It is a language",
-          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+          "aligned": "The list of its members can be found in the Python release notes.",
+          "base": "Python is a Python programming language. It is a programming language that is designed to be used in a",
+          "outcome": "win",
+          "aligned_score": -6.495523929595947,
+          "base_score": -7.284549236297607
         },
         {
           "prompt": "Summarize the plot of Snow White in one sentence.",
-          "aligned": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
-          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+          "aligned": "Two young adults from rural rural rural rural rural rural rural rural rural rural rural rural rural rural rural rural",
+          "base": "The plot of Snow White in one sentence.\n### Response:\nThe plot of Snow White in",
+          "outcome": "loss",
+          "aligned_score": -9.91645622253418,
+          "base_score": -9.366363525390625
         },
         {
           "prompt": "What is the freezing point of water at sea level in Celsius?",
-          "aligned": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
-          "base": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+          "aligned": "The freezing point of water at sea level in Celsius is Fahrenheit.",
+          "base": "The ice is melting at sea level in the Arctic Ocean. The ice is melting at sea level in",
+          "outcome": "win",
+          "aligned_score": -5.139035224914551,
+          "base_score": -10.025290489196777
         }
       ]
     }
   },
   "chat": {
-    "reply": "Bonjour.\nBonjour.\nBonjour.\nBonjour.",
-    "streaming_reply": " Paris. The capital of France is Paris. The capital of"
+    "reply": "The following figures from the Gallup Department of State, January 1, 2014, were derived from the Gallup",
+    "streaming_reply": "The capital of France is Paris."
   }
 }

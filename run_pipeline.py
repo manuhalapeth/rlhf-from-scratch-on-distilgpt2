@@ -10,10 +10,9 @@ chat and streaming demo.
 Every stage records its metrics into `results`, which is written to
 assets/results.json and rendered into assets/plots/*.png at the end of
 the run. README.md, docs/ARCHITECTURE.md, docs/TRADEOFFS.md, and
-docs/RESULTS.md were written against one such run; rerunning this script
-will produce numbers in the same neighborhood but not identical ones,
-since the synthetic data and small step counts leave real variance run
-to run.
+docs/RESULTS.md were written against one such run. With fixed seeds,
+reruns on the same machine reproduce it exactly; a different PyTorch
+version or CPU may shift the numbers slightly.
 
 Usage: python run_pipeline.py
 """
@@ -55,7 +54,6 @@ from rlhf import (
     load_distilgpt2_model,
     load_distilgpt2_tokenizer,
     lora_linear_forward,
-    make_attention_mask,
     mask_prompt_labels,
     merge_lora,
     orpo_loss,
@@ -89,12 +87,23 @@ def _token_logps(logits, token_ids):
     return log_probs.gather(dim=-1, index=token_ids.unsqueeze(-1)).squeeze(-1)
 
 
-def _response_mask_and_ids(tokenizer, prompt_prefix, full_text, max_length):
+def _template(prompt):
+    """The one prompt format used by every stage: the SFT instruction template, response left empty."""
+    return format_example({"prompt": prompt, "response": ""})
+
+
+def _response_mask_and_ids(tokenizer, prompt_prefix, full_text, max_length, add_eos=True):
     """Tokenize full_text and derive (ids, labels, response_mask) with the prompt
-    portion (prompt_prefix) masked out, reusing mask_prompt_labels."""
-    prompt_len = len(tokenizer.encode(prompt_prefix))
-    ids = tokenize_example(tokenizer, full_text, max_length=max_length)
-    labels = mask_prompt_labels(build_labels(ids), prompt_len)
+    portion (prompt_prefix) masked out, reusing mask_prompt_labels. Appends EOS
+    so the model learns where a response ends."""
+    prompt_ids = tokenizer.encode(prompt_prefix)
+    ids = tokenize_example(tokenizer, full_text, max_length=max_length - int(add_eos))
+    # BPE can merge across the prompt/response boundary (e.g. a trailing space),
+    # in which case the separately tokenized prefix would miscount the prompt.
+    assert ids[:len(prompt_ids)] == prompt_ids, f"prompt tokens do not prefix full text: {prompt_prefix!r}"
+    if add_eos:
+        ids = ids + [tokenizer.eos_token_id]
+    labels = mask_prompt_labels(build_labels(ids), len(prompt_ids))
     resp_mask = [0 if l == -100 else 1 for l in labels]
     return ids, labels, resp_mask
 
@@ -165,7 +174,7 @@ if __name__ == "__main__":
     def make_sft_batches(examples, bs=2, seed=0):
         built = []
         for ex in examples:
-            prompt_prefix = format_example({"prompt": ex["prompt"], "response": ""})
+            prompt_prefix = _template(ex["prompt"])
             full_text = format_example(ex)
             ids, labels, _ = _response_mask_and_ids(tokenizer, prompt_prefix, full_text, max_length=64)
             built.append({"input_ids": ids, "labels": labels})
@@ -179,7 +188,7 @@ if __name__ == "__main__":
     step = 0
     for epoch in range(sft_epochs):
         for batch in make_sft_batches(train_data, bs=2, seed=epoch):
-            warmup_mult = linear_warmup_schedule(step, warmup_steps=5)
+            warmup_mult = linear_warmup_schedule(step + 1, warmup_steps=5)
             for group in optimizer.param_groups:
                 group["lr"] = 5e-5 * warmup_mult
             loss = sft_train_step(model, batch, optimizer)
@@ -187,7 +196,8 @@ if __name__ == "__main__":
             step += 1
     sft_val_loss = float(evaluate_loss(model, list(make_sft_batches(val_data, bs=2))))
     print(f"SFT loss: {sft_losses[0]:.3f} -> {sft_losses[-1]:.3f} over {len(sft_losses)} steps; val_loss={sft_val_loss:.3f}")
-    sft_out = generate_and_decode(model, tokenizer, "What is the capital of Japan?", max_new_tokens=12)
+    sft_prompt = _template("What is the capital of Japan?")
+    sft_out = generate_and_decode(model, tokenizer, sft_prompt, max_new_tokens=12)[len(sft_prompt):]
     print("Post SFT completion:", repr(sft_out))
     results["sft"] = {"train_losses": sft_losses, "val_loss": sft_val_loss, "post_sft_completion": sft_out}
 
@@ -232,7 +242,7 @@ if __name__ == "__main__":
         for x, labels in probes:
             logits = lora_linear_forward(x, lm_head_weight, A, B, alpha, r)
             loss = F.cross_entropy(logits, labels)
-            micro_losses.append(float(loss))
+            micro_losses.append(loss.item())
             grad_A, grad_B = torch.autograd.grad(loss, [A, B])
             micro_grads_A.append(grad_A)
             micro_grads_B.append(grad_B)
@@ -241,7 +251,7 @@ if __name__ == "__main__":
         grad_A = accumulate_gradients(micro_grads_A)
         grad_B = accumulate_gradients(micro_grads_B)
         clip_grad_norm([grad_A, grad_B], max_norm=1.0)
-        warmup_mult = linear_warmup_schedule(lora_step, warmup_steps=5)
+        warmup_mult = linear_warmup_schedule(lora_step + 1, warmup_steps=5)
         lr = 0.01 * warmup_mult
         with torch.no_grad():
             adamw_update(A, grad_A, opt_state["A"], lr=lr)
@@ -279,7 +289,7 @@ if __name__ == "__main__":
     reward_head = torch.nn.Linear(hidden, 1)
     rm_opt = torch.optim.AdamW(reward_head.parameters(), lr=1e-3)
 
-    def build_rm_batch(pref, max_length=48):
+    def build_rm_batch(pref, max_length=64):
         chosen_texts, rejected_texts = [], []
         for ex in pref:
             formatted = format_preference(ex)
@@ -337,19 +347,20 @@ if __name__ == "__main__":
     def rollout(prompt_text, max_new_tokens=12, temperature=0.8, top_k=50):
         prompt_ids = tokenizer(prompt_text, return_tensors="pt")["input_ids"]
         generated = prompt_ids.clone()
-        ppo_policy.eval()
         with torch.no_grad():
             for _ in range(max_new_tokens):
                 next_logits = ppo_policy(generated).logits[0, -1, :]
                 next_logits = top_k_filter(next_logits, top_k)
                 next_id = sample_with_temperature(next_logits, temperature)
+                generated = torch.cat([generated, torch.tensor([[next_id]])], dim=1)
                 if next_id == tokenizer.eos_token_id:
                     break
-                generated = torch.cat([generated, torch.tensor([[next_id]])], dim=1)
-        ppo_policy.train()
         return prompt_ids, generated[:, prompt_ids.shape[1]:]
 
-    ppo_prompts = [ex["prompt"] for ex in build_synthetic_instruction_dataset()[:3]]
+    # The policy stays in eval mode (dropout off) for rollouts and updates alike,
+    # so the importance ratio is exactly one before the first update.
+    ppo_policy.eval()
+    ppo_prompts = [_template(ex["prompt"]) for ex in build_synthetic_instruction_dataset()[:3]]
     beta_kl = 0.05
     ppo_policy_losses, ppo_value_losses, ppo_entropies, ppo_rewards = [], [], [], []
 
@@ -365,8 +376,9 @@ if __name__ == "__main__":
             ref_logits = ppo_ref(full_ids, attention_mask=attn).logits[:, :-1, :]
             ref_token_logps = _token_logps(ref_logits, full_ids[:, 1:])[0, resp_slice]
 
-            old_logits = ppo_policy(full_ids, attention_mask=attn).logits[:, :-1, :]
-            old_token_logps = _token_logps(old_logits, full_ids[:, 1:])[0, resp_slice]
+            old_out = ppo_policy(full_ids, attention_mask=attn, output_hidden_states=True)
+            old_token_logps = _token_logps(old_out.logits[:, :-1, :], full_ids[:, 1:])[0, resp_slice]
+            old_values = value_head(old_out.hidden_states[-1][:, :-1, :]).squeeze(-1)[0, resp_slice]
 
         kl = per_token_kl(old_token_logps, ref_token_logps)
         response_text = tokenizer.decode(response_ids[0], skip_special_tokens=True)
@@ -377,26 +389,28 @@ if __name__ == "__main__":
         rewards.append(kl_penalized_reward(reward_scalar, float(kl[-1]), beta_kl))
         rewards_t = torch.tensor(rewards, dtype=torch.float32)
 
+        # Advantages and returns are fixed from the rollout-time value estimates,
+        # then reused across the inner update epochs.
+        advantages = gae_advantages(rewards_t, torch.cat([old_values, torch.zeros(1)]), gamma=0.99, lam=0.95)
+        returns = advantages + old_values
+        advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+
         for _inner_epoch in range(2):
             out = ppo_policy(full_ids, attention_mask=attn, output_hidden_states=True)
             logits = out.logits[:, :-1, :]
             hidden_states = out.hidden_states[-1][:, :-1, :]
             new_resp_logps = _token_logps(logits, full_ids[:, 1:])[0, resp_slice]
-            values = torch.cat([value_head(hidden_states).squeeze(-1)[0, resp_slice], torch.zeros(1)])
-
-            with torch.no_grad():
-                advantages = gae_advantages(rewards_t, values.detach(), gamma=0.99, lam=0.95)
-                returns = advantages + values.detach()[:-1]
+            values = value_head(hidden_states).squeeze(-1)[0, resp_slice]
 
             ratio = policy_ratio(new_resp_logps, old_token_logps.detach())
-            out_dict = ppo_loss(ratio, advantages, values[:-1], returns, logits[0, resp_slice],
+            out_dict = ppo_loss(ratio, advantages, values, returns, logits[0, resp_slice],
                                  clip_eps=0.2, vf_coef=0.5, ent_coef=0.01)
             ppo_opt.zero_grad()
             out_dict["loss"].backward()
             ppo_opt.step()
-            ppo_policy_losses.append(float(out_dict["policy_loss"]))
-            ppo_value_losses.append(float(out_dict["value_loss"]))
-            ppo_entropies.append(float(out_dict["entropy"]))
+            ppo_policy_losses.append(out_dict["policy_loss"].item())
+            ppo_value_losses.append(out_dict["value_loss"].item())
+            ppo_entropies.append(out_dict["entropy"].item())
 
     print(f"PPO normalized rewards per rollout: {[round(r, 3) for r in ppo_rewards]}")
     print(f"PPO policy_loss: {ppo_policy_losses[0]:.3f} -> {ppo_policy_losses[-1]:.3f}")
@@ -422,10 +436,10 @@ if __name__ == "__main__":
     dpo_ref = freeze_and_eval(copy.deepcopy(model))
     dpo_opt = torch.optim.AdamW(dpo_policy.parameters(), lr=5e-6)
 
-    def build_dpo_group(examples, key, max_length=48):
+    def build_dpo_group(examples, key, max_length=64):
         ids_list, mask_list, lengths = [], [], []
         for ex in examples:
-            prompt_prefix = ex["prompt"] + " "
+            prompt_prefix = _template(ex["prompt"])
             full_text = prompt_prefix + ex[key]
             ids, _, resp_mask = _response_mask_and_ids(tokenizer, prompt_prefix, full_text, max_length)
             ids_list.append(ids)
@@ -433,7 +447,8 @@ if __name__ == "__main__":
             lengths.append(sum(resp_mask))
         padded_ids = pad_batch(ids_list, pad_id)
         padded_mask = pad_batch(mask_list, 0)
-        attn = make_attention_mask(padded_ids, pad_id)
+        # pad == eos here, so make_attention_mask would also hide the real EOS token
+        attn = pad_batch([[1] * len(ids) for ids in ids_list], 0)
         return (torch.tensor(padded_ids), torch.tensor(attn), torch.tensor(padded_mask),
                 torch.tensor(lengths, dtype=torch.float32))
 
@@ -464,7 +479,7 @@ if __name__ == "__main__":
             loss.backward()
             dpo_opt.step()
 
-            dpo_losses.append(float(loss))
+            dpo_losses.append(loss.item())
             dpo_margins.append(float(((pc - pr) - (rc - rr)).mean()))
             last_batch_logps = (pc.detach(), pr.detach(), rc.detach(), rr.detach(), c_len, r_len)
 
@@ -510,18 +525,30 @@ if __name__ == "__main__":
     }
     eval_results = {}
     for split_name, eval_prompts in eval_sets.items():
-        comps_aligned = generate_completions(dpo_policy, tokenizer, eval_prompts, max_new_tokens=20)
-        comps_base = generate_completions(unaligned_baseline, tokenizer, eval_prompts, max_new_tokens=20)
+        templated = [_template(p) for p in eval_prompts]
+        # generate_completions returns prompt + continuation; keep only the continuation
+        comps_aligned = [c[len(t):] for c, t in zip(generate_completions(dpo_policy, tokenizer, templated, max_new_tokens=20), templated)]
+        comps_base = [c[len(t):] for c, t in zip(generate_completions(unaligned_baseline, tokenizer, templated, max_new_tokens=20), templated)]
 
         print(f"\n[{split_name}]")
         examples = []
-        for p, a, b in zip(eval_prompts, comps_aligned, comps_base):
-            print(f"  prompt: {p!r}\n    aligned: {a[len(p):]!r}\n    base:    {b[len(p):]!r}")
-            examples.append({"prompt": p, "aligned": a[len(p):], "base": b[len(p):]})
+        wins = ties = losses = 0
+        for p, t, a, b in zip(eval_prompts, templated, comps_aligned, comps_base):
+            score_a = score_with_reward(reward_bundle, tokenizer, t, a)
+            score_b = score_with_reward(reward_bundle, tokenizer, t, b)
+            outcome = "win" if score_a > score_b else ("tie" if score_a == score_b else "loss")
+            wins += outcome == "win"
+            ties += outcome == "tie"
+            losses += outcome == "loss"
+            print(f"  prompt: {p!r} [{outcome}]\n    aligned: {a!r}\n    base:    {b!r}")
+            examples.append({"prompt": p, "aligned": a, "base": b, "outcome": outcome,
+                             "aligned_score": score_a, "base_score": score_b})
 
-        rate = win_rate(reward_bundle, tokenizer, eval_prompts, comps_aligned, comps_base)
-        print(f"{split_name} win rate (reward model judged): {rate:.2f} over {len(eval_prompts)} prompts")
-        eval_results[split_name] = {"win_rate": rate, "examples": examples}
+        rate = win_rate(reward_bundle, tokenizer, templated, comps_aligned, comps_base)
+        print(f"{split_name} win rate (reward model judged, ties count half): {rate:.2f} "
+              f"over {len(eval_prompts)} prompts; wins/ties/losses = {wins}/{ties}/{losses}")
+        eval_results[split_name] = {"win_rate": rate, "wins": wins, "ties": ties, "losses": losses,
+                                    "examples": examples}
 
     results["eval"] = eval_results
 
@@ -534,7 +561,7 @@ if __name__ == "__main__":
 
     print("Streaming reply: ", end="", flush=True)
     streamed_pieces = []
-    for piece in stream_tokens(dpo_policy, tokenizer, "The capital of France is", max_new_tokens=12):
+    for piece in stream_tokens(dpo_policy, tokenizer, _template("What is the capital of France?"), max_new_tokens=12):
         print(piece, end="", flush=True)
         streamed_pieces.append(piece)
     print()

@@ -8,17 +8,16 @@ import torch
 import torch.nn.functional as F
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from .data import format_example
 
-def load_distilgpt2_tokenizer(model_name="sshleifer/tiny-gpt2"):
+
+def load_distilgpt2_tokenizer(model_name="distilgpt2"):
     """Load a Hugging Face tokenizer for a DistilGPT2 compatible model.
 
     Parameters
     ----------
     model_name : str
         Name (or path) of the model/tokenizer on the Hugging Face Hub.
-        Defaults to a tiny stand in model so it runs quickly on CPU; pass
-        "distilgpt2" for the real model with actual language modeling
-        capacity.
 
     Returns
     -------
@@ -31,7 +30,7 @@ def load_distilgpt2_tokenizer(model_name="sshleifer/tiny-gpt2"):
     return tokenizer
 
 
-def load_distilgpt2_model(model_name="sshleifer/tiny-gpt2"):
+def load_distilgpt2_model(model_name="distilgpt2"):
     """Load a causal language model from the Hugging Face Hub, ready for inference.
 
     Parameters
@@ -143,7 +142,7 @@ def generate_completions(model, tokenizer, prompts, max_new_tokens=8):
 
 
 def stream_tokens(model, tokenizer, prompt, max_new_tokens=8):
-    """Yield newly generated text pieces one token at a time via greedy decoding."""
+    """Yield newly generated text pieces one token at a time via greedy decoding, stopping at EOS."""
     if tokenizer.pad_token is None:
         set_pad_token_to_eos(tokenizer)
 
@@ -155,6 +154,8 @@ def stream_tokens(model, tokenizer, prompt, max_new_tokens=8):
             outputs = model(input_ids=input_ids)
             next_token_logits = outputs.logits[0, -1, :]
             next_token_id = greedy_decode(next_token_logits)
+            if next_token_id == tokenizer.eos_token_id:
+                break
 
             next_token_tensor = torch.tensor([[next_token_id]])
             input_ids = torch.cat([input_ids, next_token_tensor], dim=1)
@@ -185,13 +186,11 @@ def apply_stop_tokens(text, stop_tokens, eos_token=None):
 
 
 def chat(model, tokenizer, user_message, system_prompt=None, max_new_tokens=32, stop_tokens=None):
-    """Top level conversational wrapper: build a chat prompt, generate, and return the cleaned reply."""
+    """Top level conversational wrapper: wrap the message in the SFT instruction template, generate, and return the cleaned reply."""
     tokenizer = set_pad_token_to_eos(tokenizer)
 
-    if system_prompt:
-        prompt = f"### System:\n{system_prompt}\n\n### User:\n{user_message}\n\n### Assistant:\n"
-    else:
-        prompt = f"### User:\n{user_message}\n\n### Assistant:\n"
+    instruction = f"{system_prompt}\n\n{user_message}" if system_prompt else user_message
+    prompt = format_example({"prompt": instruction, "response": ""})
 
     if max_new_tokens <= 0:
         return ""

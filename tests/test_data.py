@@ -108,8 +108,8 @@ def test_build_synthetic_preference_dataset_repeats_the_pool_deterministically()
     assert len(a) == 8
 
 
-def test_format_preference_prefixes_the_prompt():
+def test_format_preference_uses_the_sft_template():
     example = {"prompt": "Q", "chosen": "good answer", "rejected": "bad answer"}
     formatted = format_preference(example)
-    assert formatted["chosen_text"] == "Q good answer"
-    assert formatted["rejected_text"] == "Q bad answer"
+    assert formatted["chosen_text"] == format_example({"prompt": "Q", "response": "good answer"})
+    assert formatted["rejected_text"] == format_example({"prompt": "Q", "response": "bad answer"})

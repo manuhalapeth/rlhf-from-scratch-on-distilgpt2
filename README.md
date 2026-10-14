@@ -16,16 +16,12 @@ produced these charts.
 
 ## What this is and what it is not
 
-This is a correctness and legibility project. The
-goal was to implement every piece of an RLHF pipeline correctly, wire it
-together into something that actually runs against a real (if small)
-language model, and be completely honest in the writeup about what six
-training examples can and cannot teach that model. It is not a claim that
-this particular run produces a strongly aligned model; the evaluation
-section below shows, with real numbers, exactly where it does and does not.
-`docs/TRADEOFFS.md` explains every design decision that produced this
-scope, including the ones that trade a cleaner headline number for a more
-honest and more testable pipeline.
+This is a correctness and legibility project. The goal was to implement
+every piece of an RLHF pipeline correctly, wire it together into something
+that runs against a real (if small) language model, and report plainly
+what six training examples can and cannot teach that model. It does not
+claim to produce a well aligned model. `docs/TRADEOFFS.md` explains the
+design decisions behind that scope.
 
 ## Quickstart
 
@@ -37,7 +33,7 @@ pip install -r requirements.txt
 # fast, no model download: pure tensor and data logic
 pytest -q
 
-# full run against real DistilGPT2, a few minutes on CPU
+# full run against real DistilGPT2, about a minute on a laptop CPU
 python run_pipeline.py
 ```
 
@@ -66,7 +62,7 @@ flowchart LR
 none of which prints, trains for a fixed number of steps, or knows what
 dataset it will be called with. `run_pipeline.py` is the only file that
 makes those decisions. That split is what makes `tests/` fast (fifty tests,
-under ten seconds, no network or model download) and what makes rerunning
+a few seconds, no network or model download) and what makes rerunning
 the pipeline with different data or hyperparameters a one file change. Full
 detail, including a module by module breakdown and the reasoning behind the
 PPO and DPO branches both starting from the same checkpoint independently,
@@ -74,35 +70,34 @@ is in `docs/ARCHITECTURE.md`.
 
 ## Headline results
 
-Full analysis with every chart is in `docs/RESULTS.md`. Three of the more
-interesting findings:
+Full analysis with every chart is in `docs/RESULTS.md`. Three findings:
 
-**Supervised finetuning loss falls from 5.02 to 0.002 over 36 steps** on a
-five example training set, while validation loss stays at 4.91, the
-correct and expected signature of a real model memorizing a training set
-too small to generalize from.
+**Supervised finetuning loss falls from 4.95 to 0.001 over 36 steps** on a
+five example training set, while validation loss on the held out example
+is 5.64: a real model memorizing a training set too small to generalize
+from.
 
 ![Supervised finetuning loss](assets/plots/sft_loss.png)
 
 **DPO training pushes the preference margin between chosen and rejected
-responses from 0.0 to 35.9**, and evaluating that same trained result under
-IPO's loss formula produces a number in the hundreds, not because anything
-is broken, but because IPO regresses toward a fixed target margin
-(`1 / (2 * beta)`, which is 5.0 here) while DPO has no such ceiling. Seeing
-that documented difference between the two methods show up in real numbers
-from a model that was actually trained is a better explanation than either
-formula read on its own; the full derivation is in `docs/RESULTS.md`.
+responses from 0 to 64.2**, and scoring that same trained result with IPO's
+loss gives about 3,600. Nothing is broken: IPO regresses the margin toward
+a fixed target (`1 / (2 * beta)`, which is 5.0 here) while DPO has no
+ceiling, and `(64.2 - 5)^2 ≈ 3,500`. The derivation is in
+`docs/RESULTS.md`.
 
 ![Preference loss formulas compared on one batch](assets/plots/preference_loss_comparison.png)
 
-**The aligned model's win rate against its own unaligned starting point
-depends heavily on whether the evaluation prompts resemble the training
-data: 33% on prompts topically similar to the preference dataset, 17% on
-prompts that are not**, both judged by the reward model trained earlier in
-the same run. Neither clears the 50% chance line, which is the honest,
-directly measured consequence of training on six preference pairs; the gap
-between the two numbers is the generalization boundary made visible instead
-of hidden behind one aggregate statistic.
+**The evaluation harness works, but its judge does not.** Judged by the
+reward model trained earlier in the run, the aligned model beats the base
+model on 5 of 6 out of domain prompts and 4 of 6 in domain prompts. The
+per prompt outputs show those numbers are not meaningful: the judge ranks
+the aligned model's correct "The capital of Italy is Rome." below the base
+model's "The capital of Italy is the capital of Italy." A reward model
+trained on six preference pairs cannot evaluate open ended answers.
+(An earlier version of this README reported a 33% vs 17% win rate gap;
+that came entirely from tied outputs and pipeline bugs, now fixed. See
+`docs/RESULTS.md`.)
 
 ![Win rate, in domain vs out of domain](assets/plots/win_rate_comparison.png)
 
@@ -153,12 +148,15 @@ of hidden behind one aggregate statistic.
 The step by step function signatures in `rlhf/` began as a guided exercise
 on Deep-ML. What is in this repository now goes well past that starting
 point: the original scaffold defaulted to a two parameter test fixture
-model that was mathematically incapable of learning anything, silently
+model that was mathematically incapable of learning anything (the library
+default is now `distilgpt2`), silently
 dropped a prompt masking step so supervised finetuning trained on
 instruction text instead of only responses, and exercised barely a third of
 the functions it defined. Every one of those issues is fixed here, and the
 project has been restructured into a tested package, wired into a single
-coherent pipeline that exercises all sixty five underlying functions, and
+coherent pipeline that exercises sixty one of its sixty five functions
+(`top_p_filter`, `apply_template`, `reward_bce_loss` and `compute_returns`
+are not called by the pipeline; the last three are unit tested), and
 documented across `docs/` with real numbers from real runs. The fundamentals
 came from a guided exercise; everything built on top of them, the
 architecture, the bug fixes, the missing PPO and DPO wiring, the evaluation
@@ -166,10 +164,10 @@ design, and this documentation did not.
 
 ## What I would do next
 
-In order of expected impact, and explained in full in `docs/TRADEOFFS.md`:
-swap in a larger, public preference dataset (Anthropic's HH-RLHF or a
-similar corpus) so the win rate evaluation has enough training signal to
-clear chance; extend the PPO rollout budget past three prompts so the value
-head has enough gradient steps to fit before being judged; and finetune the
-reward model's backbone rather than only its linear head, once there is
-enough preference data to make that not immediately overfit.
+In order of expected impact, explained in `docs/RESULTS.md` and
+`docs/TRADEOFFS.md`: swap in a larger, public preference dataset
+(Anthropic's HH-RLHF or similar); evaluate with a judge that is validated
+on held out preference pairs, or an external LLM judge, over hundreds of
+prompts instead of six; extend the PPO rollout budget past three prompts so
+the value head can fit; and finetune the reward model's backbone rather
+than only its linear head, once there is enough data to avoid overfitting.

@@ -4,7 +4,7 @@ This document is the reasoning behind the choices in the code, written so a
 reader can judge whether each one was sensible without having to reverse
 engineer it from the diff. Each entry states the decision, the alternative
 that was considered, and why the decision won for this project's goal:
-building an honest, from scratch, fully wired RLHF pipeline on real, small
+building a from scratch, fully wired RLHF pipeline on real, small
 scale hardware.
 
 ## Real DistilGPT2 instead of a tiny test fixture
@@ -17,7 +17,19 @@ incapable of moving far from the uniform guessing loss of `ln(50257) ≈
 10.82`, regardless of how correct the surrounding training code is. Every
 number in `docs/RESULTS.md` comes from real DistilGPT2 (six layers, 768
 hidden dimensions, about 82 million parameters), which is small enough to
-finetune on a laptop CPU in minutes but large enough to actually learn.
+finetune on a laptop CPU in about a minute but large enough to actually learn.
+
+## One prompt template for every stage
+
+Supervised finetuning, the reward model, PPO rollouts, DPO, evaluation and
+`chat()` all wrap prompts in the same `### Instruction / ### Response`
+template (`format_example` in `rlhf/data.py`), and SFT and DPO responses
+end with an EOS token. An earlier version of the pipeline used the template
+only for SFT and raw prompts everywhere else, so later stages trained and
+evaluated the model on a format it had never been finetuned on, and the
+model never learned to stop. Most of its evaluation outputs were runs of
+newline characters. Using one format is a small change, but every number
+downstream depends on it.
 
 ## Reward model backbone is a frozen, separate copy
 
@@ -60,8 +72,7 @@ unscaled inputs. The fix, standardizing rewards against the mean and
 standard deviation observed over the reward model's own training batch
 before using them in PPO, is standard practice in production RLHF
 implementations (OpenAI's and TRL's PPO trainers both do a version of this),
-not a cosmetic patch specific to this repository. See
-`docs/RESULTS.md` for the before and after numbers.
+not a cosmetic patch specific to this repository.
 
 ## The LoRA demonstration is isolated, not chained into later stages
 
@@ -76,7 +87,7 @@ through PPO and DPO as well, is a real engineering project on its own and
 was judged to be out of scope for what this repository is trying to
 demonstrate, which is that the LoRA math itself, freezing, delta
 computation, gradient based training, and merging, is implemented correctly
-and verifiably. The honest label for this section is "a correctness proof
+and verifiably. The accurate label for this section is "a correctness proof
 against a real weight matrix," not "a fully productionized adapter
 finetuning path," and the code and this document both say so.
 
@@ -89,11 +100,9 @@ of six repeating preference pairs, finetuning an 82 million parameter
 backbone would memorize those six pairs almost immediately and tell you
 nothing about generalization; freezing the backbone and training only the
 roughly 770 parameter head is both faster and a fairer test of whether the
-signal in the frozen representations is separable at all. It reached 100%
-pairwise accuracy on this dataset, which says the representations are
-separable, not that the reward model would generalize to prompts outside
-this synthetic set. See the in domain versus out of domain evaluation split
-in `docs/RESULTS.md` for direct evidence of that generalization gap.
+signal in the frozen representations is separable at all. In this run it
+ranks 75% of the pairs in its final batch correctly and is a poor judge of
+open ended completions; see the evaluation section of `docs/RESULTS.md`.
 
 ## Sparse terminal reward with per token KL shaping for PPO, not a per token reward model
 
@@ -118,12 +127,12 @@ tiny, defined directly in `rlhf/data.py`. A public dataset such as
 Anthropic's HH-RLHF or OpenAI's summarization comparisons would produce more
 convincing final numbers, but would also take considerably longer to
 download, tokenize, and train against, working against this project's other
-goal of running the entire pipeline, all eight stages, end to end in a few
-minutes on a laptop CPU with no GPU and no external downloads beyond the
-model weights themselves. The cost of that choice is direct and reported
-honestly in `docs/RESULTS.md`: the trained models overfit fast and the
-aligned model's advantage over the base model does not reliably transfer to
-prompts outside the training topics. Swapping in a larger, public preference
+goal of running the entire pipeline, all eight stages, end to end in about
+a minute on a laptop CPU with no GPU and no external downloads beyond the
+model weights themselves. The cost of that choice is reported in
+`docs/RESULTS.md`: every stage memorizes its data, and a reward model
+trained on six pairs is too weak a judge to say whether the aligned model
+improved at all. Swapping in a larger, public preference
 dataset would be a natural next step and requires no code changes beyond
 what feeds `build_synthetic_preference_dataset`'s call sites in
 `run_pipeline.py`.
@@ -139,12 +148,12 @@ differently by construction, does not require five trained checkpoints to
 demonstrate. Instead, DPO is the one method whose weights are actually
 updated, and IPO, KTO, ORPO, and SimPO are evaluated once, on the final
 batch DPO trained against. That is enough to see a genuinely interesting,
-correct result: IPO's loss on that batch is large (in the hundreds) not
+correct result: IPO's loss on that batch is large (in the thousands) not
 because anything is broken, but because IPO is designed around a *fixed*
 target preference margin (`1 / (2 * beta)`), while DPO has no such ceiling
 and keeps rewarding the policy for separating chosen from rejected further
 and further apart. Training DPO and then scoring that result under IPO's
-loss is a direct, honest illustration of a real, documented difference
+loss is a direct illustration of a real, documented difference
 between the two methods. See `docs/RESULTS.md` for the numbers and a fuller
 explanation. Training all five to convergence and comparing final win rates
 is the natural extension if this project's scope grows.

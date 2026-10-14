@@ -63,7 +63,8 @@ def plot_sft_loss(train_losses, val_loss, out_path):
     fig, (ax,) = _new_figure(1)
     _line(ax, train_losses, color=BLUE)
     ax.axhline(val_loss, color=MUTED, linewidth=1.4, linestyle=(0, (4, 3)), zorder=2)
-    y_span = max(train_losses) - min(train_losses + [val_loss])
+    y_span = max(train_losses + [val_loss]) - min(train_losses + [val_loss])
+    ax.set_ylim(top=max(train_losses + [val_loss]) + 0.15 * y_span)  # headroom for the label
     ax.text(len(train_losses) * 0.5, val_loss + 0.04 * y_span, f"val loss {val_loss:.2f}",
             color=SECONDARY_INK, fontsize=9, va="bottom", ha="center",
             bbox={"facecolor": SURFACE, "edgecolor": "none", "pad": 1.5})

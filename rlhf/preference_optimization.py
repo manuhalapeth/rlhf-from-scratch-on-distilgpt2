@@ -38,7 +38,10 @@ def ipo_loss(policy_chosen_logps, policy_rejected_logps, ref_chosen_logps, ref_r
 
 
 def kto_loss(policy_logps, ref_logps, labels, beta=0.1):
-    """Kahneman Tversky Optimization loss for unpaired desirable and undesirable examples."""
+    """Simplified Kahneman Tversky Optimization loss for unpaired desirable and undesirable examples.
+
+    Omits the paper's batch level KL reference point (z_ref is taken as zero)
+    and its separate desirable/undesirable weights."""
     policy_logps = torch.as_tensor(policy_logps, dtype=torch.float32)
     ref_logps = torch.as_tensor(ref_logps, dtype=torch.float32)
     labels = torch.as_tensor(labels, dtype=torch.float32)

@@ -173,8 +173,9 @@ def build_synthetic_preference_dataset(num_examples=4, seed=0):
 
 
 def format_preference(example):
-    """Render a preference example into chosen_text and rejected_text strings."""
+    """Render a preference example into chosen_text and rejected_text strings,
+    using the same instruction template as supervised finetuning."""
     return {
-        "chosen_text": example["prompt"] + " " + example["chosen"],
-        "rejected_text": example["prompt"] + " " + example["rejected"],
+        "chosen_text": format_example({"prompt": example["prompt"], "response": example["chosen"]}),
+        "rejected_text": format_example({"prompt": example["prompt"], "response": example["rejected"]}),
     }

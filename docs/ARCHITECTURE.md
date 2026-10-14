@@ -105,8 +105,9 @@ model instance for both roles) and worth calling out explicitly.
 
 **`decoding.py`** covers everything from tokenizer loading to the final chat
 wrapper: greedy decoding, temperature sampling, top k and top p filtering,
-one token at a time streaming, and the `chat()` function that formats a
-system and user message into the same instruction template used during SFT.
+one token at a time streaming (stopping at EOS), and the `chat()` function
+that formats a system and user message into the same instruction template
+used during SFT.
 
 **`data.py`** has no model dependency at all. It builds the six example
 synthetic instruction dataset and the six example synthetic preference
@@ -173,11 +174,13 @@ margin, unlike DPO which keeps rewarding you for pushing past it"
 (`test_preference_optimization.py`). That property based style is what
 actually catches a sign error or a swapped argument order, which is the
 class of bug that matters most in loss function code and the hardest to
-spot by eye. The full suite runs in under ten seconds, which is what makes
-it reasonable to run before every change to `run_pipeline.py`, long before
-spending the several minutes a full pipeline run against real DistilGPT2
-costs.
+spot by eye. The full suite runs in a few seconds, which is what makes it
+reasonable to run before every change to `run_pipeline.py`, before spending
+the minute or so a full pipeline run against real DistilGPT2 costs.
 
 `run_pipeline.py` itself is the integration test: if the shapes, masks, and
-gradient flow between all eight stages are not consistent, it throws, not
-silently produces garbage.
+gradient flow between all eight stages are not consistent, it throws rather
+than silently producing garbage. It also asserts that every prompt's tokens
+are an exact prefix of the prompt plus response, which catches the BPE
+boundary bug where a trailing space merges into the first response token
+and prompt masking silently drops a response token.
