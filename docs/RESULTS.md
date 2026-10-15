@@ -205,7 +205,7 @@ pair appears verbatim in the preference dataset.
 
 In rough order of expected impact:
 
-1. **A real preference dataset** (Anthropic's HH-RLHF or similar) in place
+1. **A real preference dataset** (HH-RLHF or similar) in place
    of six synthetic pairs. Every stage currently memorizes its data.
 2. **A trustworthy judge.** A reward model trained on held out preference
    data and checked for pairwise accuracy on pairs it never saw, or an

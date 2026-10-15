@@ -166,7 +166,7 @@ design, and this documentation did not.
 
 In order of expected impact, explained in `docs/RESULTS.md` and
 `docs/TRADEOFFS.md`: swap in a larger, public preference dataset
-(Anthropic's HH-RLHF or similar); evaluate with a judge that is validated
+(HH-RLHF or similar); evaluate with a judge that is validated
 on held out preference pairs, or an external LLM judge, over hundreds of
 prompts instead of six; extend the PPO rollout budget past three prompts so
 the value head can fit; and finetune the reward model's backbone rather

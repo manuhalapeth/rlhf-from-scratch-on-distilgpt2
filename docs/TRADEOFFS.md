@@ -124,7 +124,7 @@ response, nothing else.
 Both the instruction dataset (six examples) and the preference dataset (six
 underlying pairs, cycled to reach a requested count) are synthetic and
 tiny, defined directly in `rlhf/data.py`. A public dataset such as
-Anthropic's HH-RLHF or OpenAI's summarization comparisons would produce more
+HH-RLHF or OpenAI's summarization comparisons would produce more
 convincing final numbers, but would also take considerably longer to
 download, tokenize, and train against, working against this project's other
 goal of running the entire pipeline, all eight stages, end to end in about
